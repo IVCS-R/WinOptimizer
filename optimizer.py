@@ -702,45 +702,45 @@ class WinOptimizer:
     
     def display_banner(self):
         """Display application banner."""
-        banner = """
-[bold green]
-╔══════════════════════════════════════════════════════════════════════════╗
-║                                                                          ║
-║   ███╗   ██╗██╗███╗   ██╗██╗     ██╗ ██████╗ ██████╗  ██████╗ ██╗   ██╗███╗   ██╗███████╗  ║
-║   ████╗  ██║██║████╗  ██║██║     ██║██╔═══██╗██╔══██╗██╔═══██╗██║   ██║████╗  ██║██╔════╝  ║
-║   ██╔██╗ ██║██║██╔██╗ ██║██║     ██║██║   ██║██║  ██║██║   ██║██║   ██║██╔██╗ ██║█████╗    ║
-║   ██║╚██╗██║██║██║╚██╗██║██║     ██║██║   ██║██║  ██║██║   ██║██║   ██║██║╚██╗██║██╔══╝    ║
-║   ██║ ╚████║██║██║ ╚████║███████╗██║╚██████╔╝██████╔╝╚██████╔╝╚██████╔╝██║ ╚████║███████╗  ║
-║   ╚═╝  ╚═══╝╚═╝╚═╝  ╚═══╝╚══════╝╚═╝ ╚═════╝ ╚═════╝  ╚═════╝ ╚═════╝╚═╝  ╚═══╝╚══════╝  ║
-║                                                                          ║
-║                    Advanced Windows Optimization Suite                   ║
-║                              Version {version}                            ║
-╚══════════════════════════════════════════════════════════════════════════╝
-[/bold green]"""
+        banner = (
+"\n[bold green]"
+"+========================================================================+\n"
+"|                                                                        |\n"
+"|    __      __  ______  _____       ______  _____  _   _  _____         |\n"
+"|    \\ \\    / / |  ____||  __ \\     |  ____|/ ____|| \\ | ||  __ \\       |\n"
+"|     \\ \\  / /  | |__   | |  | |    | |__  | (___  |  \\| || |  | |      |\n"
+"|      \\ \\/ /   |  __|  | |  | |    |  __|  \\___ \\ | . ` || |  | |      |\n"
+"|       \\  /    | |____ | |__| | _  | |____ ____) || |\\  || |__| | _    |\n"
+"|        \\/     |______||_____/(_) |______|_____/ |_| \\_||_____/ (_)   |\n"
+"|                                                                        |\n"
+"|                   Advanced Windows Optimization Suite                  |\n"
+"|                              Version {version}                          |\n"
+"+========================================================================+\n"
+"[/bold green]")
         console.print(banner.format(version=VERSION))
     
     def display_menu(self):
         """Display main menu."""
         menu = """
-[bold cyan]╔══════════════════════════════════════════════════════════════╗
-║                        MAIN MENU                            ║
-╠══════════════════════════════════════════════════════════════╣
-║  [1] System Cleanup        - Clean temp files & cache       ║
-║  [2] Startup Manager       - Manage startup programs        ║
-║  [3] Performance Optimization - Optimize system speed       ║
-║  [4] Network Optimization  - Optimize network settings      ║
-║  [5] Privacy Settings      - Configure privacy options      ║
-║  [6] Gaming Optimization   - Optimize for gaming            ║
-║  [7] System Information    - View system details            ║
-║  [8] Backup & Restore      - Backup/restore settings        ║
-║  [9] Full Optimization     - Run all optimizations          ║
-║  [0] Exit                                                            ║
-╚══════════════════════════════════════════════════════════════╝[/bold cyan]"""
+[bold cyan]+========================================================+
+|                      MAIN MENU                          |
++========================================================+
+|  [1] System Cleanup        - Clean temp files & cache  |
+|  [2] Startup Manager       - Manage startup programs   |
+|  [3] Performance Optimization - Optimize system speed  |
+|  [4] Network Optimization  - Optimize network settings |
+|  [5] Privacy Settings      - Configure privacy options |
+|  [6] Gaming Optimization   - Optimize for gaming       |
+|  [7] System Information    - View system details       |
+|  [8] Backup & Restore      - Backup/restore settings   |
+|  [9] Full Optimization     - Run all optimizations     |
+|  [0] Exit                                             |
++========================================================+[/bold cyan]"""
         console.print(menu)
     
     def run_cleanup(self):
         """Run system cleanup."""
-        console.print("\n[bold yellow]═══ System Cleanup ═══[/bold yellow]")
+        console.print("\n[bold yellow]=== System Cleanup ===[/bold yellow]")
         
         # Calculate size
         with console.status("[bold green]Calculating cleanup size...[/bold green]"):
@@ -769,18 +769,18 @@ class WinOptimizer:
             ], f"cleanup_backup_{datetime.now().strftime('%Y%m%d_%H%M%S')}")
             
             # Run cleanup
-            with console.status("[bold green]Cleaning...[/bold green]") as status:
-                results = self.cleanup.run_full_cleanup(lambda msg: status.update(f"[bold green]{msg}[/bold green]"))
+            console.print("\n[bold green]Cleaning...[/bold green]")
+            results = self.cleanup.run_full_cleanup()
             
             # Display results
             total_cleaned = sum(r['size'] for r in results.values())
-            console.print(f"\n[bold green]✓ Cleaned {get_size_format(total_cleaned)}[/bold green]")
+            console.print(f"\n[bold green]+ Cleaned {get_size_format(total_cleaned)}[/bold green]")
             
             log_operation("CLEANUP", f"Cleaned {get_size_format(total_cleaned)}")
     
     def run_startup_manager(self):
         """Run startup manager."""
-        console.print("\n[bold yellow]═══ Startup Manager ═══[/bold yellow]")
+        console.print("\n[bold yellow]=== Startup Manager ===[/bold yellow]")
         
         items = self.startup.get_startup_items()
         
@@ -818,7 +818,7 @@ class WinOptimizer:
     
     def run_performance_optimization(self):
         """Run performance optimization."""
-        console.print("\n[bold yellow]═══ Performance Optimization ═══[/bold yellow]")
+        console.print("\n[bold yellow]=== Performance Optimization ===[/bold yellow]")
         
         options = [
             ("1", "Set High Performance Power Plan"),
@@ -856,7 +856,7 @@ class WinOptimizer:
     
     def run_network_optimization(self):
         """Run network optimization."""
-        console.print("\n[bold yellow]═══ Network Optimization ═══[/bold yellow]")
+        console.print("\n[bold yellow]=== Network Optimization ===[/bold yellow]")
         
         options = [
             ("1", "Flush DNS Cache"),
@@ -889,7 +889,7 @@ class WinOptimizer:
     
     def run_privacy_optimization(self):
         """Run privacy optimization."""
-        console.print("\n[bold yellow]═══ Privacy Settings ═══[/bold yellow]")
+        console.print("\n[bold yellow]=== Privacy Settings ===[/bold yellow]")
         
         options = [
             ("1", "Disable Telemetry"),
@@ -922,7 +922,7 @@ class WinOptimizer:
     
     def run_gaming_optimization(self):
         """Run gaming optimization."""
-        console.print("\n[bold yellow]═══ Gaming Optimization ═══[/bold yellow]")
+        console.print("\n[bold yellow]=== Gaming Optimization ===[/bold yellow]")
         
         if Confirm.ask("Apply gaming optimizations?"):
             with console.status("[bold green]Optimizing for gaming...[/bold green]"):
@@ -932,7 +932,7 @@ class WinOptimizer:
     
     def show_system_info(self):
         """Show system information."""
-        console.print("\n[bold yellow]═══ System Information ═══[/bold yellow]")
+        console.print("\n[bold yellow]=== System Information ===[/bold yellow]")
         
         with console.status("[bold green]Gathering system info...[/bold green]"):
             info = self.system.get_system_info()
@@ -986,7 +986,7 @@ class WinOptimizer:
     
     def run_full_optimization(self):
         """Run full system optimization."""
-        console.print("\n[bold yellow]═══ Full System Optimization ═══[/bold yellow]")
+        console.print("\n[bold yellow]=== Full System Optimization ===[/bold yellow]")
         
         if not Confirm.ask("This will apply all optimizations. Continue?"):
             return
@@ -997,44 +997,82 @@ class WinOptimizer:
             str(Path.home() / 'AppData' / 'Roaming' / 'Microsoft' / 'Windows' / 'Start Menu' / 'Programs' / 'Startup'),
         ], f"full_optimization_{datetime.now().strftime('%Y%m%d_%H%M%S')}")
         
-        with Progress(
-            SpinnerColumn(),
-            TextColumn("[progress.description]{task.description}"),
-            BarColumn(),
-            console=console,
-        ) as progress:
-            # Cleanup
-            task = progress.add_task("[cyan]Cleaning system...", total=5)
-            self.cleanup.run_full_cleanup(lambda msg: progress.update(task, description=f"[cyan]{msg}"))
-            progress.advance(task)
-            
-            # Performance
-            progress.update(task, description="[cyan]Optimizing performance...")
+        results = []
+        
+        # Step 1: Cleanup
+        console.print("\n[bold cyan][1/5] Cleaning system...[/bold cyan]")
+        try:
+            self.cleanup.run_full_cleanup()
+            console.print("  [green]+ Cleanup completed[/green]")
+            results.append(("Cleanup", True))
+        except Exception as e:
+            console.print(f"  [red]X Cleanup failed: {e}[/red]")
+            results.append(("Cleanup", False))
+        
+        # Step 2: Performance
+        console.print("\n[bold cyan][2/5] Optimizing performance...[/bold cyan]")
+        try:
             self.performance.set_high_performance_power_plan()
             self.performance.disable_visual_effects()
-            progress.advance(task)
-            
-            # Network
-            progress.update(task, description="[cyan]Optimizing network...")
+            console.print("  [green]+ Performance optimized[/green]")
+            results.append(("Performance", True))
+        except Exception as e:
+            console.print(f"  [red]X Performance optimization failed: {e}[/red]")
+            results.append(("Performance", False))
+        
+        # Step 3: Network
+        console.print("\n[bold cyan][3/5] Optimizing network...[/bold cyan]")
+        try:
             self.network.flush_dns()
             self.network.optimize_tcp_ip()
-            progress.advance(task)
-            
-            # Privacy
-            progress.update(task, description="[cyan]Applying privacy settings...")
+            console.print("  [green]+ Network optimized[/green]")
+            results.append(("Network", True))
+        except Exception as e:
+            console.print(f"  [red]X Network optimization failed: {e}[/red]")
+            results.append(("Network", False))
+        
+        # Step 4: Privacy
+        console.print("\n[bold cyan][4/5] Applying privacy settings...[/bold cyan]")
+        try:
             self.privacy.disable_telemetry()
             self.privacy.disable_advertising_id()
-            progress.advance(task)
-            
-            # Gaming
-            progress.update(task, description="[cyan]Optimizing for gaming...")
-            self.performance.optimize_system_for_gaming()
-            progress.advance(task)
+            console.print("  [green]+ Privacy settings applied[/green]")
+            results.append(("Privacy", True))
+        except Exception as e:
+            console.print(f"  [red]X Privacy settings failed: {e}[/red]")
+            results.append(("Privacy", False))
         
-        console.print("\n[bold green]✓ Full optimization complete![/bold green]")
+        # Step 5: Gaming
+        console.print("\n[bold cyan][5/5] Optimizing for gaming...[/bold cyan]")
+        try:
+            self.performance.optimize_system_for_gaming()
+            console.print("  [green]+ Gaming optimized[/green]")
+            results.append(("Gaming", True))
+        except Exception as e:
+            console.print(f"  [red]X Gaming optimization failed: {e}[/red]")
+            results.append(("Gaming", False))
+        
+        # Summary
+        console.print("\n" + "="*50)
+        console.print("[bold yellow]OPTIMIZATION SUMMARY[/bold yellow]")
+        console.print("="*50)
+        
+        success = sum(1 for _, ok in results if ok)
+        total = len(results)
+        
+        for name, ok in results:
+            status = "[green]SUCCESS[/green]" if ok else "[red]FAILED[/red]"
+            console.print(f"  {name}: {status}")
+        
+        console.print("\n" + "="*50)
+        if success == total:
+            console.print(f"[bold green]All {total} optimizations completed successfully![/bold green]")
+        else:
+            console.print(f"[bold yellow]{success}/{total} optimizations completed[/bold yellow]")
+        
         console.print("[yellow]Some changes may require a restart to take effect.[/yellow]")
         
-        log_operation("FULL_OPTIMIZATION", "All optimizations applied")
+        log_operation("FULL_OPTIMIZATION", f"Results: {success}/{total} successful")
     
     def run(self):
         """Main application loop."""
