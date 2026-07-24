@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-WINOPTIMIZER v1.0.0
+WINOPTIMIZER v1.1.0
 Advanced Windows System Optimization Suite
 
 Features:
@@ -52,7 +52,7 @@ except ImportError:
     from rich.text import Text
     from rich import box
 
-VERSION = "1.0.0"
+VERSION = "1.1.0"
 APP_NAME = "WinOptimizer"
 BACKUP_DIR = Path.home() / "WinOptimizer_Backups"
 LOG_DIR = Path.home() / "WinOptimizer_Logs"
