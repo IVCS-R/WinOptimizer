@@ -1,22 +1,20 @@
 #!/usr/bin/env python3
 """
-╔══════════════════════════════════════════════════════════════════════════╗
-║                    WINOPTIMIZER v1.0.0                                    ║
-║              Advanced Windows System Optimization Suite                  ║
-║                                                                          ║
-║  Features:                                                               ║
-║  - System cleanup (temp files, cache, logs)                              ║
-║  - Startup management                                                    ║
-║  - Performance optimization                                              ║
-║  - Network optimization                                                  ║
-║  - Privacy settings                                                      ║
-║  - System information                                                    ║
-║  - Gaming optimization                                                   ║
-║  - Backup & restore                                                      ║
-║                                                                          ║
-║  Author: IVCS                                                            ║
-║  License: MIT                                                            ║
-╚══════════════════════════════════════════════════════════════════════════╝
+WINOPTIMIZER v1.0.0
+Advanced Windows System Optimization Suite
+
+Features:
+- System cleanup (temp files, cache, logs)
+- Startup management
+- Performance optimization
+- Network optimization
+- Privacy settings
+- System information
+- Gaming optimization
+- Backup & restore
+
+Author: IVCS
+License: MIT
 """
 
 import os
@@ -29,7 +27,11 @@ import winreg
 from datetime import datetime
 from pathlib import Path
 from typing import Dict, List, Tuple, Optional
-import hashlib
+
+try:
+    import psutil
+except ImportError:
+    psutil = None
 
 try:
     from rich.console import Console
@@ -38,7 +40,6 @@ try:
     from rich.prompt import Prompt, Confirm
     from rich.progress import Progress, SpinnerColumn, TextColumn, BarColumn
     from rich.text import Text
-    from rich.layout import Layout
     from rich import box
 except ImportError:
     print("Installing required packages...")
@@ -49,28 +50,28 @@ except ImportError:
     from rich.prompt import Prompt, Confirm
     from rich.progress import Progress, SpinnerColumn, TextColumn, BarColumn
     from rich.text import Text
-    from rich.layout import Layout
     from rich import box
 
-# ── Constants ──────────────────────────────────────────────────────────────────
 VERSION = "1.0.0"
 APP_NAME = "WinOptimizer"
 BACKUP_DIR = Path.home() / "WinOptimizer_Backups"
 LOG_DIR = Path.home() / "WinOptimizer_Logs"
 
-# ── Console setup ──────────────────────────────────────────────────────────────
 console = Console()
 
-# ── Utility Functions ──────────────────────────────────────────────────────────
+
+def clear_screen():
+    os.system('cls' if os.name == 'nt' else 'clear')
+
+
 def is_admin() -> bool:
-    """Check if running with administrator privileges."""
     try:
         return ctypes.windll.shell32.IsUserAnAdmin() != 0
-    except:
+    except Exception:
         return False
 
+
 def run_as_admin():
-    """Restart the script with administrator privileges."""
     if not is_admin():
         console.print("[yellow]Requesting administrator privileges...[/yellow]")
         try:
@@ -78,61 +79,60 @@ def run_as_admin():
                 None, "runas", sys.executable, " ".join(sys.argv), None, 1
             )
             sys.exit(0)
-        except:
+        except Exception:
             console.print("[red]Failed to get administrator privileges.[/red]")
             console.print("[yellow]Please run as administrator for full functionality.[/yellow]")
 
+
 def create_backup(items: List[str], backup_name: str) -> bool:
-    """Create a backup of specified items."""
     try:
         backup_path = BACKUP_DIR / backup_name
         backup_path.mkdir(parents=True, exist_ok=True)
-        
+
         for item in items:
+            if not item:
+                continue
             item_path = Path(item)
             if item_path.exists():
                 if item_path.is_file():
                     shutil.copy2(item_path, backup_path)
                 elif item_path.is_dir():
                     shutil.copytree(item_path, backup_path / item_path.name, dirs_exist_ok=True)
-        
-        console.print(f"[green]✓ Backup created: {backup_path}[/green]")
+
+        console.print(f"[green]+ Backup created: {backup_path}[/green]")
         return True
     except Exception as e:
-        console.print(f"[red]✗ Backup failed: {e}[/red]")
+        console.print(f"[red]X Backup failed: {e}[/red]")
         return False
 
+
 def log_operation(operation: str, details: str):
-    """Log an operation to file."""
     LOG_DIR.mkdir(exist_ok=True)
     log_file = LOG_DIR / f"optimizer_{datetime.now().strftime('%Y%m%d')}.log"
-    
     with open(log_file, "a", encoding="utf-8") as f:
         f.write(f"[{datetime.now().isoformat()}] {operation}: {details}\n")
 
+
 def get_size_format(size_bytes: int) -> str:
-    """Convert bytes to human readable format."""
     for unit in ['B', 'KB', 'MB', 'GB', 'TB']:
         if size_bytes < 1024.0:
             return f"{size_bytes:.2f} {unit}"
         size_bytes /= 1024.0
     return f"{size_bytes:.2f} PB"
 
+
 def get_directory_size(path: Path) -> int:
-    """Calculate total size of a directory."""
     total_size = 0
     try:
         for item in path.rglob('*'):
             if item.is_file():
                 total_size += item.stat().st_size
-    except:
+    except Exception:
         pass
     return total_size
 
-# ── System Cleanup Module ──────────────────────────────────────────────────────
+
 class SystemCleanup:
-    """System cleanup and maintenance operations."""
-    
     TEMP_DIRS = [
         Path(os.environ.get('TEMP', '')),
         Path(os.environ.get('TMP', '')),
@@ -141,7 +141,7 @@ class SystemCleanup:
         Path('C:\\Windows\\Prefetch'),
         Path('C:\\Windows\\SoftwareDistribution\\Download'),
     ]
-    
+
     BROWSER_CACHE_DIRS = [
         Path.home() / 'AppData' / 'Local' / 'Google' / 'Chrome' / 'User Data' / 'Default' / 'Cache',
         Path.home() / 'AppData' / 'Local' / 'Google' / 'Chrome' / 'User Data' / 'Default' / 'Code Cache',
@@ -149,28 +149,19 @@ class SystemCleanup:
         Path.home() / 'AppData' / 'Local' / 'Mozilla' / 'Firefox' / 'Profiles',
         Path.home() / 'AppData' / 'Local' / 'BraveSoftware' / 'Brave-Browser' / 'User Data' / 'Default' / 'Cache',
     ]
-    
+
     @staticmethod
     def calculate_cleanup_size() -> Dict[str, int]:
-        """Calculate total size of files that can be cleaned."""
-        sizes = {
-            'temp': 0,
-            'browser_cache': 0,
-            'windows_logs': 0,
-            'recycle_bin': 0,
-        }
-        
-        # Temp files
+        sizes = {'temp': 0, 'browser_cache': 0, 'windows_logs': 0, 'recycle_bin': 0}
+
         for temp_dir in SystemCleanup.TEMP_DIRS:
             if temp_dir.exists():
                 sizes['temp'] += get_directory_size(temp_dir)
-        
-        # Browser cache
+
         for cache_dir in SystemCleanup.BROWSER_CACHE_DIRS:
             if cache_dir.exists():
                 sizes['browser_cache'] += get_directory_size(cache_dir)
-        
-        # Windows logs
+
         log_dirs = [
             Path('C:\\Windows\\Logs'),
             Path.home() / 'AppData' / 'Local' / 'CrashDumps',
@@ -178,21 +169,19 @@ class SystemCleanup:
         for log_dir in log_dirs:
             if log_dir.exists():
                 sizes['windows_logs'] += get_directory_size(log_dir)
-        
-        # Recycle Bin
+
         try:
             sizes['recycle_bin'] = get_directory_size(Path('C:\\$Recycle.Bin'))
-        except:
+        except Exception:
             pass
-        
+
         return sizes
-    
+
     @staticmethod
     def clean_temp_files() -> Tuple[int, List[str]]:
-        """Clean temporary files."""
         cleaned = []
         total_size = 0
-        
+
         for temp_dir in SystemCleanup.TEMP_DIRS:
             if temp_dir.exists():
                 try:
@@ -203,19 +192,18 @@ class SystemCleanup:
                                 item.unlink()
                                 total_size += size
                                 cleaned.append(str(item))
-                        except:
+                        except Exception:
                             pass
-                except:
+                except Exception:
                     pass
-        
+
         return total_size, cleaned
-    
+
     @staticmethod
     def clean_browser_cache() -> Tuple[int, List[str]]:
-        """Clean browser cache."""
         cleaned = []
         total_size = 0
-        
+
         for cache_dir in SystemCleanup.BROWSER_CACHE_DIRS:
             if cache_dir.exists():
                 try:
@@ -223,22 +211,21 @@ class SystemCleanup:
                     shutil.rmtree(cache_dir)
                     total_size += size
                     cleaned.append(str(cache_dir))
-                except:
+                except Exception:
                     pass
-        
+
         return total_size, cleaned
-    
+
     @staticmethod
     def clean_windows_logs() -> Tuple[int, List[str]]:
-        """Clean Windows log files."""
         cleaned = []
         total_size = 0
-        
+
         log_dirs = [
             Path('C:\\Windows\\Logs'),
             Path.home() / 'AppData' / 'Local' / 'CrashDumps',
         ]
-        
+
         for log_dir in log_dirs:
             if log_dir.exists():
                 try:
@@ -248,60 +235,64 @@ class SystemCleanup:
                             item.unlink()
                             total_size += size
                             cleaned.append(str(item))
-                        except:
+                        except Exception:
                             pass
-                except:
+                except Exception:
                     pass
-        
+
         return total_size, cleaned
-    
+
     @staticmethod
     def empty_recycle_bin() -> Tuple[int, bool]:
-        """Empty the Recycle Bin."""
         try:
             size = get_directory_size(Path('C:\\$Recycle.Bin'))
-            subprocess.run(['rd', '/s', '/q', 'C:\\$Recycle.Bin'], 
-                         shell=True, capture_output=True)
+            result = subprocess.run(
+                ['powershell', '-Command',
+                 'Clear-RecycleBin -Force -ErrorAction SilentlyContinue'],
+                capture_output=True
+            )
+            if result.returncode != 0:
+                result = subprocess.run(
+                    ['cmd', '/c', 'rd', '/s', '/q', 'C:\\$Recycle.Bin'],
+                    capture_output=True
+                )
             return size, True
-        except:
+        except Exception:
             return 0, False
-    
+
     @staticmethod
     def run_full_cleanup(callback=None) -> Dict:
-        """Run a complete system cleanup."""
         results = {
             'temp': {'size': 0, 'files': 0},
             'browser': {'size': 0, 'dirs': 0},
             'logs': {'size': 0, 'files': 0},
             'recycle': {'size': 0, 'success': False},
         }
-        
+
         if callback:
             callback("Cleaning temp files...")
         size, files = SystemCleanup.clean_temp_files()
         results['temp'] = {'size': size, 'files': len(files)}
-        
+
         if callback:
             callback("Cleaning browser cache...")
         size, dirs = SystemCleanup.clean_browser_cache()
         results['browser'] = {'size': size, 'dirs': len(dirs)}
-        
+
         if callback:
             callback("Cleaning Windows logs...")
         size, files = SystemCleanup.clean_windows_logs()
         results['logs'] = {'size': size, 'files': len(files)}
-        
+
         if callback:
             callback("Emptying Recycle Bin...")
         size, success = SystemCleanup.empty_recycle_bin()
         results['recycle'] = {'size': size, 'success': success}
-        
+
         return results
 
-# ── Startup Manager Module ─────────────────────────────────────────────────────
+
 class StartupManager:
-    """Manage startup programs and services."""
-    
     REGISTRY_PATHS = {
         'user_run': r'Software\Microsoft\Windows\CurrentVersion\Run',
         'user_runonce': r'Software\Microsoft\Windows\CurrentVersion\RunOnce',
@@ -309,13 +300,11 @@ class StartupManager:
         'machine_runonce': r'SOFTWARE\Microsoft\Windows\CurrentVersion\RunOnce',
         'startup_folder': str(Path.home() / 'AppData' / 'Roaming' / 'Microsoft' / 'Windows' / 'Start Menu' / 'Programs' / 'Startup'),
     }
-    
+
     @staticmethod
     def get_startup_items() -> List[Dict]:
-        """Get list of startup items."""
         items = []
-        
-        # Registry items
+
         for location, reg_path in StartupManager.REGISTRY_PATHS.items():
             if location == 'startup_folder':
                 continue
@@ -337,13 +326,12 @@ class StartupManager:
                             'enabled': True
                         })
                         i += 1
-                    except WindowsError:
+                    except OSError:
                         break
                 winreg.CloseKey(key)
-            except:
+            except Exception:
                 pass
-        
-        # Startup folder items
+
         startup_folder = Path(StartupManager.REGISTRY_PATHS['startup_folder'])
         if startup_folder.exists():
             for item in startup_folder.iterdir():
@@ -354,23 +342,21 @@ class StartupManager:
                         'location': 'startup_folder',
                         'enabled': True
                     })
-        
+
         return items
-    
+
     @staticmethod
     def disable_startup_item(item: Dict) -> bool:
-        """Disable a startup item."""
         try:
             if item['location'] == 'startup_folder':
-                # Move to backup location
                 backup_dir = BACKUP_DIR / 'startup_items'
                 backup_dir.mkdir(parents=True, exist_ok=True)
                 source = Path(item['command'])
                 if source.exists():
                     shutil.move(str(source), str(backup_dir / source.name))
                     return True
+                return False
             else:
-                # Remove from registry
                 location = item['location']
                 reg_path = StartupManager.REGISTRY_PATHS[location]
                 key = winreg.OpenKey(
@@ -385,20 +371,20 @@ class StartupManager:
         except Exception as e:
             console.print(f"[red]Error disabling {item['name']}: {e}[/red]")
             return False
-    
+
     @staticmethod
     def enable_startup_item(item: Dict) -> bool:
-        """Enable a startup item."""
         try:
             if item['location'] == 'startup_folder':
-                # Move back from backup
                 backup_dir = BACKUP_DIR / 'startup_items'
-                source = backup_dir / Path(item['command']).name
-                if source.exists():
-                    shutil.move(str(source), item['command'])
+                backup_file = backup_dir / (item['name'] + Path(item['command']).suffix)
+                if backup_file.exists():
+                    dest = Path(StartupManager.REGISTRY_PATHS['startup_folder']) / backup_file.name
+                    shutil.move(str(backup_file), str(dest))
                     return True
+                console.print(f"[red]Backup not found for {item['name']}[/red]")
+                return False
             else:
-                # Add to registry
                 location = item['location']
                 reg_path = StartupManager.REGISTRY_PATHS[location]
                 key = winreg.OpenKey(
@@ -414,23 +400,21 @@ class StartupManager:
             console.print(f"[red]Error enabling {item['name']}: {e}[/red]")
             return False
 
-# ── Performance Optimizer Module ───────────────────────────────────────────────
+
 class PerformanceOptimizer:
-    """Optimize system performance settings."""
-    
     @staticmethod
     def set_high_performance_power_plan() -> bool:
-        """Set power plan to High Performance."""
         try:
-            subprocess.run(['powercfg', '/setactive', '8c5e7fda-e8bf-4a96-9a85-a6e23a8c635c'],
-                         capture_output=True, shell=True)
+            subprocess.run(
+                ['powercfg', '/setactive', '8c5e7fda-e8bf-4a96-9a85-a6e23a8c635c'],
+                capture_output=True
+            )
             return True
-        except:
+        except Exception:
             return False
-    
+
     @staticmethod
     def disable_visual_effects() -> bool:
-        """Disable unnecessary visual effects for better performance."""
         try:
             key = winreg.OpenKey(
                 winreg.HKEY_CURRENT_USER,
@@ -440,8 +424,7 @@ class PerformanceOptimizer:
             )
             winreg.SetValueEx(key, 'VisualFXSetting', 0, winreg.REG_DWORD, 2)
             winreg.CloseKey(key)
-            
-            # Disable transparency
+
             key = winreg.OpenKey(
                 winreg.HKEY_CURRENT_USER,
                 r'SOFTWARE\Microsoft\Windows\CurrentVersion\Themes\Personalize',
@@ -450,54 +433,56 @@ class PerformanceOptimizer:
             )
             winreg.SetValueEx(key, 'EnableTransparency', 0, winreg.REG_DWORD, 0)
             winreg.CloseKey(key)
-            
+
             return True
-        except:
+        except Exception:
             return False
-    
+
     @staticmethod
     def optimize_virtual_memory() -> bool:
-        """Optimize virtual memory settings."""
-        try:
-            # Get system drive
-            system_drive = os.environ.get('SystemDrive', 'C:')
-            
-            # Set optimal pagefile size (1.5x RAM)
-            import psutil
-            ram_gb = psutil.virtual_memory().total / (1024**3)
-            pagefile_size = int(ram_gb * 1.5 * 1024)  # In MB
-            
-            subprocess.run([
-                'wmic', 'computersystem', 'where', 'name="%computername%"',
-                'set', f'AutomaticManagedPagefile=False'
-            ], capture_output=True, shell=True)
-            
-            subprocess.run([
-                'wmic', 'pagefileset', 'where', f"name='{system_drive}\\\\pagefile.sys'",
-                'set', f'InitialSize={pagefile_size}', f'MaximumSize={pagefile_size}'
-            ], capture_output=True, shell=True)
-            
-            return True
-        except:
+        if psutil is None:
+            console.print("[red]psutil not installed. Cannot optimize virtual memory.[/red]")
             return False
-    
+        try:
+            system_drive = os.environ.get('SystemDrive', 'C:')
+            ram_gb = psutil.virtual_memory().total / (1024 ** 3)
+            pagefile_size = int(ram_gb * 1.5 * 1024)
+
+            script = (
+                f"$cs = Get-WmiObject Win32_ComputerSystem; "
+                f"$cs.AutomaticManagedPagefile = $false; "
+                f"$cs.Put(); "
+                f"$pf = Get-WmiObject Win32_PageFileSetting; "
+                f"$pf.InitialSize = {pagefile_size}; "
+                f"$pf.MaximumSize = {pagefile_size}; "
+                f"$pf.Put()"
+            )
+            subprocess.run(
+                ['powershell', '-Command', script],
+                capture_output=True
+            )
+            return True
+        except Exception:
+            return False
+
     @staticmethod
     def disable_search_indexing() -> bool:
-        """Disable Windows Search indexing service."""
         try:
-            subprocess.run(['sc', 'config', 'WSearch', 'start=', 'disabled'],
-                         capture_output=True, shell=True)
-            subprocess.run(['net', 'stop', 'WSearch'],
-                         capture_output=True, shell=True)
+            subprocess.run(
+                ['sc', 'config', 'WSearch', 'start=', 'disabled'],
+                capture_output=True
+            )
+            subprocess.run(
+                ['net', 'stop', 'WSearch'],
+                capture_output=True
+            )
             return True
-        except:
+        except Exception:
             return False
-    
+
     @staticmethod
     def optimize_system_for_gaming() -> bool:
-        """Optimize system settings for gaming."""
         try:
-            # Enable Game Mode
             key = winreg.OpenKey(
                 winreg.HKEY_CURRENT_USER,
                 r'Software\Microsoft\GameBar',
@@ -507,8 +492,7 @@ class PerformanceOptimizer:
             winreg.SetValueEx(key, 'AllowAutoGameMode', 0, winreg.REG_DWORD, 1)
             winreg.SetValueEx(key, 'AutoGameModeEnabled', 0, winreg.REG_DWORD, 1)
             winreg.CloseKey(key)
-            
-            # Optimize GPU scheduling
+
             key = winreg.OpenKey(
                 winreg.HKEY_LOCAL_MACHINE,
                 r'SYSTEM\CurrentControlSet\Control\GraphicsDrivers',
@@ -517,32 +501,26 @@ class PerformanceOptimizer:
             )
             winreg.SetValueEx(key, 'HwSchMode', 0, winreg.REG_DWORD, 2)
             winreg.CloseKey(key)
-            
+
             return True
-        except:
+        except Exception:
             return False
 
-# ── Network Optimizer Module ───────────────────────────────────────────────────
+
 class NetworkOptimizer:
-    """Optimize network settings."""
-    
     @staticmethod
     def flush_dns() -> bool:
-        """Flush DNS cache."""
         try:
-            subprocess.run(['ipconfig', '/flushdns'], capture_output=True, shell=True)
+            subprocess.run(['ipconfig', '/flushdns'], capture_output=True)
             return True
-        except:
+        except Exception:
             return False
-    
+
     @staticmethod
     def optimize_tcp_ip() -> bool:
-        """Optimize TCP/IP settings."""
         try:
-            # Reset TCP/IP stack
-            subprocess.run(['netsh', 'int', 'ip', 'reset'], capture_output=True, shell=True)
-            
-            # Optimize network adapter settings
+            subprocess.run(['netsh', 'int', 'ip', 'reset'], capture_output=True)
+
             commands = [
                 'netsh int tcp set global autotuninglevel=normal',
                 'netsh int tcp set global chimney=enabled',
@@ -551,38 +529,33 @@ class NetworkOptimizer:
                 'netsh int tcp set global ecncapability=disabled',
                 'netsh int tcp set global timestamps=disabled',
             ]
-            
+
             for cmd in commands:
-                subprocess.run(cmd.split(), capture_output=True, shell=True)
-            
+                subprocess.run(cmd.split(), capture_output=True)
+
             return True
-        except:
-            return False
-    
-    @staticmethod
-    def reset_winsock() -> bool:
-        """Reset Winsock catalog."""
-        try:
-            subprocess.run(['netsh', 'winsock', 'reset'], capture_output=True, shell=True)
-            return True
-        except:
+        except Exception:
             return False
 
-# ── Privacy Optimizer Module ───────────────────────────────────────────────────
+    @staticmethod
+    def reset_winsock() -> bool:
+        try:
+            subprocess.run(['netsh', 'winsock', 'reset'], capture_output=True)
+            return True
+        except Exception:
+            return False
+
+
 class PrivacyOptimizer:
-    """Optimize privacy settings."""
-    
     @staticmethod
     def disable_telemetry() -> bool:
-        """Disable Windows telemetry."""
         try:
-            # Disable telemetry service
-            subprocess.run(['sc', 'config', 'DiagTrack', 'start=', 'disabled'],
-                         capture_output=True, shell=True)
-            subprocess.run(['net', 'stop', 'DiagTrack'],
-                         capture_output=True, shell=True)
-            
-            # Disable activity history
+            subprocess.run(
+                ['sc', 'config', 'DiagTrack', 'start=', 'disabled'],
+                capture_output=True
+            )
+            subprocess.run(['net', 'stop', 'DiagTrack'], capture_output=True)
+
             key = winreg.OpenKey(
                 winreg.HKEY_LOCAL_MACHINE,
                 r'Policies\Microsoft\Windows\System',
@@ -592,14 +565,13 @@ class PrivacyOptimizer:
             winreg.SetValueEx(key, 'EnableActivityFeed', 0, winreg.REG_DWORD, 0)
             winreg.SetValueEx(key, 'PublishUserActivities', 0, winreg.REG_DWORD, 0)
             winreg.CloseKey(key)
-            
+
             return True
-        except:
+        except Exception:
             return False
-    
+
     @staticmethod
     def disable_cortana() -> bool:
-        """Disable Cortana."""
         try:
             key = winreg.OpenKey(
                 winreg.HKEY_LOCAL_MACHINE,
@@ -610,12 +582,11 @@ class PrivacyOptimizer:
             winreg.SetValueEx(key, 'AllowCortana', 0, winreg.REG_DWORD, 0)
             winreg.CloseKey(key)
             return True
-        except:
+        except Exception:
             return False
-    
+
     @staticmethod
     def disable_advertising_id() -> bool:
-        """Disable advertising ID."""
         try:
             key = winreg.OpenKey(
                 winreg.HKEY_CURRENT_USER,
@@ -626,18 +597,17 @@ class PrivacyOptimizer:
             winreg.SetValueEx(key, 'Enabled', 0, winreg.REG_DWORD, 0)
             winreg.CloseKey(key)
             return True
-        except:
+        except Exception:
             return False
 
-# ── System Information Module ──────────────────────────────────────────────────
+
 class SystemInfo:
-    """Get system information."""
-    
     @staticmethod
     def get_system_info() -> Dict:
-        """Get comprehensive system information."""
-        import psutil
-        
+        if psutil is None:
+            console.print("[red]psutil not installed. Run: pip install psutil[/red]")
+            return {}
+
         info = {
             'os': {
                 'name': os.environ.get('OS', 'Unknown'),
@@ -646,8 +616,8 @@ class SystemInfo:
             },
             'cpu': {
                 'name': os.environ.get('PROCESSOR_IDENTIFIER', 'Unknown'),
-                'cores': psutil.cpu_count(logical=False),
-                'threads': psutil.cpu_count(logical=True),
+                'cores': psutil.cpu_count(logical=False) or 0,
+                'threads': psutil.cpu_count(logical=True) or 0,
                 'usage': psutil.cpu_percent(interval=1),
             },
             'memory': {
@@ -658,8 +628,7 @@ class SystemInfo:
             },
             'disk': {},
         }
-        
-        # Disk information
+
         for partition in psutil.disk_partitions():
             try:
                 usage = psutil.disk_usage(partition.mountpoint)
@@ -669,29 +638,27 @@ class SystemInfo:
                     'free': usage.free,
                     'percent': usage.percent,
                 }
-            except:
+            except Exception:
                 pass
-        
+
         return info
-    
+
     @staticmethod
     def get_running_processes() -> List[Dict]:
-        """Get list of running processes."""
-        import psutil
-        
+        if psutil is None:
+            return []
+
         processes = []
         for proc in psutil.process_iter(['pid', 'name', 'cpu_percent', 'memory_percent']):
             try:
                 processes.append(proc.info)
-            except:
+            except Exception:
                 pass
-        
+
         return sorted(processes, key=lambda x: x.get('cpu_percent', 0) or 0, reverse=True)
 
-# ── Main Optimizer Class ───────────────────────────────────────────────────────
+
 class WinOptimizer:
-    """Main optimizer class."""
-    
     def __init__(self):
         self.cleanup = SystemCleanup()
         self.startup = StartupManager()
@@ -699,127 +666,124 @@ class WinOptimizer:
         self.network = NetworkOptimizer()
         self.privacy = PrivacyOptimizer()
         self.system = SystemInfo()
-    
+
     def display_banner(self):
-        """Display application banner."""
         banner = (
-"\n[bold green]"
-"+========================================================================+\n"
-"|                                                                        |\n"
-"|    __      __  ______  _____       ______  _____  _   _  _____         |\n"
-"|    \\ \\    / / |  ____||  __ \\     |  ____|/ ____|| \\ | ||  __ \\       |\n"
-"|     \\ \\  / /  | |__   | |  | |    | |__  | (___  |  \\| || |  | |      |\n"
-"|      \\ \\/ /   |  __|  | |  | |    |  __|  \\___ \\ | . ` || |  | |      |\n"
-"|       \\  /    | |____ | |__| | _  | |____ ____) || |\\  || |__| | _    |\n"
-"|        \\/     |______||_____/(_) |______|_____/ |_| \\_||_____/ (_)   |\n"
-"|                                                                        |\n"
-"|                   Advanced Windows Optimization Suite                  |\n"
-"|                              Version {version}                          |\n"
-"+========================================================================+\n"
-"[/bold green]")
+            "\n[bold green]"
+            "+======================================================================+\n"
+            "|                                                                      |\n"
+            "|   __      __  ______  _____       ______  _____  _   _  _____       |\n"
+            "|   \\ \\    / / |  ____||  __ \\     |  ____|/ ____|| \\ | ||  __ \\      |\n"
+            "|    \\ \\  / /  | |__   | |  | |    | |__  | (___  |  \\| || |  | |     |\n"
+            "|     \\ \\/ /   |  __|  | |  | |    |  __|  \\___ \\ | . ` || |  | |     |\n"
+            "|      \\  /    | |____ | |__| | _  | |____ ____) || |\\  || |__| | _   |\n"
+            "|       \\/     |______||_____/(_) |______|_____/ |_| \\_||_____/ (_)  |\n"
+            "|                                                                      |\n"
+            "|                 Advanced Windows Optimization Suite                  |\n"
+            "|                            Version {version}                            |\n"
+            "+======================================================================+\n"
+            "[/bold green]"
+        )
         console.print(banner.format(version=VERSION))
-    
+
     def display_menu(self):
-        """Display main menu."""
         menu = """
 [bold cyan]+========================================================+
 |                      MAIN MENU                          |
 +========================================================+
-|  [1] System Cleanup        - Clean temp files & cache  |
-|  [2] Startup Manager       - Manage startup programs   |
-|  [3] Performance Optimization - Optimize system speed  |
-|  [4] Network Optimization  - Optimize network settings |
-|  [5] Privacy Settings      - Configure privacy options |
-|  [6] Gaming Optimization   - Optimize for gaming       |
-|  [7] System Information    - View system details       |
-|  [8] Backup & Restore      - Backup/restore settings   |
-|  [9] Full Optimization     - Run all optimizations     |
-|  [0] Exit                                             |
+|  [1] System Cleanup          - Clean temp files & cache |
+|  [2] Startup Manager         - Manage startup programs  |
+|  [3] Performance Optimization - Optimize system speed   |
+|  [4] Network Optimization    - Optimize network settings|
+|  [5] Privacy Settings        - Configure privacy options|
+|  [6] Gaming Optimization     - Optimize for gaming      |
+|  [7] System Information      - View system details      |
+|  [8] Backup & Restore        - Backup/restore settings  |
+|  [9] Full Optimization       - Run all optimizations    |
+|  [0] Exit                                              |
 +========================================================+[/bold cyan]"""
         console.print(menu)
-    
+
     def run_cleanup(self):
-        """Run system cleanup."""
         console.print("\n[bold yellow]=== System Cleanup ===[/bold yellow]")
-        
-        # Calculate size
+
         with console.status("[bold green]Calculating cleanup size...[/bold green]"):
             sizes = self.cleanup.calculate_cleanup_size()
-        
+
         total = sum(sizes.values())
-        
-        # Display sizes
+
         table = Table(title="Cleanup Preview", box=box.ROUNDED)
         table.add_column("Category", style="cyan")
         table.add_column("Size", style="green")
-        
+
         table.add_row("Temp Files", get_size_format(sizes['temp']))
         table.add_row("Browser Cache", get_size_format(sizes['browser_cache']))
         table.add_row("Windows Logs", get_size_format(sizes['windows_logs']))
         table.add_row("Recycle Bin", get_size_format(sizes['recycle_bin']))
         table.add_row("[bold]Total[/bold]", f"[bold]{get_size_format(total)}[/bold]")
-        
+
         console.print(table)
-        
+
         if Confirm.ask(f"\nClean {get_size_format(total)} of files?"):
-            # Create backup
             create_backup([
                 os.environ.get('TEMP', ''),
                 os.environ.get('TMP', ''),
             ], f"cleanup_backup_{datetime.now().strftime('%Y%m%d_%H%M%S')}")
-            
-            # Run cleanup
+
             console.print("\n[bold green]Cleaning...[/bold green]")
             results = self.cleanup.run_full_cleanup()
-            
-            # Display results
+
             total_cleaned = sum(r['size'] for r in results.values())
             console.print(f"\n[bold green]+ Cleaned {get_size_format(total_cleaned)}[/bold green]")
-            
+
             log_operation("CLEANUP", f"Cleaned {get_size_format(total_cleaned)}")
-    
+
     def run_startup_manager(self):
-        """Run startup manager."""
         console.print("\n[bold yellow]=== Startup Manager ===[/bold yellow]")
-        
+
         items = self.startup.get_startup_items()
-        
+
         if not items:
             console.print("[yellow]No startup items found.[/yellow]")
             return
-        
+
         table = Table(title="Startup Items", box=box.ROUNDED)
         table.add_column("#", style="dim")
         table.add_column("Name", style="cyan")
         table.add_column("Location", style="green")
         table.add_column("Status", style="yellow")
-        
+
         for i, item in enumerate(items, 1):
-            status = "[green]✓ Enabled[/green]" if item['enabled'] else "[red]✗ Disabled[/red]"
+            status = "[green]+ Enabled[/green]" if item['enabled'] else "[red]- Disabled[/red]"
             table.add_row(str(i), item['name'], item['location'], status)
-        
+
         console.print(table)
-        
+
         action = Prompt.ask(
             "\nAction",
             choices=["disable", "enable", "back"],
             default="back"
         )
-        
+
         if action in ["disable", "enable"]:
-            num = int(Prompt.ask("Enter item number")) - 1
+            try:
+                num = int(Prompt.ask("Enter item number")) - 1
+            except ValueError:
+                console.print("[red]Invalid number.[/red]")
+                return
             if 0 <= num < len(items):
                 if action == "disable":
                     if self.startup.disable_startup_item(items[num]):
-                        console.print(f"[green]✓ Disabled {items[num]['name']}[/green]")
+                        console.print(f"[green]+ Disabled {items[num]['name']}[/green]")
                 else:
                     if self.startup.enable_startup_item(items[num]):
-                        console.print(f"[green]✓ Enabled {items[num]['name']}[/green]")
-    
+                        console.print(f"[green]+ Enabled {items[num]['name']}[/green]")
+            else:
+                console.print("[red]Invalid item number.[/red]")
+
     def run_performance_optimization(self):
-        """Run performance optimization."""
         console.print("\n[bold yellow]=== Performance Optimization ===[/bold yellow]")
-        
+
         options = [
             ("1", "Set High Performance Power Plan"),
             ("2", "Disable Visual Effects"),
@@ -828,36 +792,47 @@ class WinOptimizer:
             ("5", "Apply All Performance Optimizations"),
             ("0", "Back"),
         ]
-        
+
         for num, desc in options:
             console.print(f"  [{num}] {desc}")
-        
+
         choice = Prompt.ask("\nSelect option", choices=["0", "1", "2", "3", "4", "5"])
-        
+
         if choice == "1":
             if self.performance.set_high_performance_power_plan():
-                console.print("[green]✓ High Performance power plan enabled[/green]")
+                console.print("[green]+ High Performance power plan enabled[/green]")
+            else:
+                console.print("[red]X Failed to set power plan[/red]")
         elif choice == "2":
             if self.performance.disable_visual_effects():
-                console.print("[green]✓ Visual effects disabled[/green]")
+                console.print("[green]+ Visual effects disabled[/green]")
+            else:
+                console.print("[red]X Failed to disable visual effects[/red]")
         elif choice == "3":
             if self.performance.optimize_virtual_memory():
-                console.print("[green]✓ Virtual memory optimized[/green]")
+                console.print("[green]+ Virtual memory optimized[/green]")
+            else:
+                console.print("[red]X Failed to optimize virtual memory[/red]")
         elif choice == "4":
             if self.performance.disable_search_indexing():
-                console.print("[green]✓ Search indexing disabled[/green]")
+                console.print("[green]+ Search indexing disabled[/green]")
+            else:
+                console.print("[red]X Failed to disable search indexing[/red]")
         elif choice == "5":
-            with console.status("[bold green]Applying optimizations...[/bold green]"):
-                self.performance.set_high_performance_power_plan()
-                self.performance.disable_visual_effects()
-                self.performance.optimize_virtual_memory()
-                self.performance.disable_search_indexing()
-            console.print("[green]✓ All performance optimizations applied[/green]")
-    
+            console.print("[bold green]Applying optimizations...[/bold green]")
+            results = []
+            results.append(("Power Plan", self.performance.set_high_performance_power_plan()))
+            results.append(("Visual Effects", self.performance.disable_visual_effects()))
+            results.append(("Virtual Memory", self.performance.optimize_virtual_memory()))
+            results.append(("Search Indexing", self.performance.disable_search_indexing()))
+            for name, ok in results:
+                status = "[green]+[/green]" if ok else "[red]X[/red]"
+                console.print(f"  {status} {name}")
+            console.print("[bold green]+ All performance optimizations applied[/bold green]")
+
     def run_network_optimization(self):
-        """Run network optimization."""
         console.print("\n[bold yellow]=== Network Optimization ===[/bold yellow]")
-        
+
         options = [
             ("1", "Flush DNS Cache"),
             ("2", "Optimize TCP/IP Settings"),
@@ -865,32 +840,41 @@ class WinOptimizer:
             ("4", "Apply All Network Optimizations"),
             ("0", "Back"),
         ]
-        
+
         for num, desc in options:
             console.print(f"  [{num}] {desc}")
-        
+
         choice = Prompt.ask("\nSelect option", choices=["0", "1", "2", "3", "4"])
-        
+
         if choice == "1":
             if self.network.flush_dns():
-                console.print("[green]✓ DNS cache flushed[/green]")
+                console.print("[green]+ DNS cache flushed[/green]")
+            else:
+                console.print("[red]X Failed to flush DNS[/red]")
         elif choice == "2":
             if self.network.optimize_tcp_ip():
-                console.print("[green]✓ TCP/IP optimized[/green]")
+                console.print("[green]+ TCP/IP optimized[/green]")
+            else:
+                console.print("[red]X Failed to optimize TCP/IP[/red]")
         elif choice == "3":
             if self.network.reset_winsock():
-                console.print("[green]✓ Winsock reset[/green]")
+                console.print("[green]+ Winsock reset[/green]")
+            else:
+                console.print("[red]X Failed to reset Winsock[/red]")
         elif choice == "4":
-            with console.status("[bold green]Applying network optimizations...[/bold green]"):
-                self.network.flush_dns()
-                self.network.optimize_tcp_ip()
-                self.network.reset_winsock()
-            console.print("[green]✓ All network optimizations applied[/green]")
-    
+            console.print("[bold green]Applying network optimizations...[/bold green]")
+            results = []
+            results.append(("DNS", self.network.flush_dns()))
+            results.append(("TCP/IP", self.network.optimize_tcp_ip()))
+            results.append(("Winsock", self.network.reset_winsock()))
+            for name, ok in results:
+                status = "[green]+[/green]" if ok else "[red]X[/red]"
+                console.print(f"  {status} {name}")
+            console.print("[bold green]+ All network optimizations applied[/bold green]")
+
     def run_privacy_optimization(self):
-        """Run privacy optimization."""
         console.print("\n[bold yellow]=== Privacy Settings ===[/bold yellow]")
-        
+
         options = [
             ("1", "Disable Telemetry"),
             ("2", "Disable Cortana"),
@@ -898,54 +882,68 @@ class WinOptimizer:
             ("4", "Apply All Privacy Settings"),
             ("0", "Back"),
         ]
-        
+
         for num, desc in options:
             console.print(f"  [{num}] {desc}")
-        
+
         choice = Prompt.ask("\nSelect option", choices=["0", "1", "2", "3", "4"])
-        
+
         if choice == "1":
             if self.privacy.disable_telemetry():
-                console.print("[green]✓ Telemetry disabled[/green]")
+                console.print("[green]+ Telemetry disabled[/green]")
+            else:
+                console.print("[red]X Failed to disable telemetry[/red]")
         elif choice == "2":
             if self.privacy.disable_cortana():
-                console.print("[green]✓ Cortana disabled[/green]")
+                console.print("[green]+ Cortana disabled[/green]")
+            else:
+                console.print("[red]X Failed to disable Cortana[/red]")
         elif choice == "3":
             if self.privacy.disable_advertising_id():
-                console.print("[green]✓ Advertising ID disabled[/green]")
+                console.print("[green]+ Advertising ID disabled[/green]")
+            else:
+                console.print("[red]X Failed to disable advertising ID[/red]")
         elif choice == "4":
-            with console.status("[bold green]Applying privacy settings...[/bold green]"):
-                self.privacy.disable_telemetry()
-                self.privacy.disable_cortana()
-                self.privacy.disable_advertising_id()
-            console.print("[green]✓ All privacy settings applied[/green]")
-    
+            console.print("[bold green]Applying privacy settings...[/bold green]")
+            results = []
+            results.append(("Telemetry", self.privacy.disable_telemetry()))
+            results.append(("Cortana", self.privacy.disable_cortana()))
+            results.append(("Advertising ID", self.privacy.disable_advertising_id()))
+            for name, ok in results:
+                status = "[green]+[/green]" if ok else "[red]X[/red]"
+                console.print(f"  {status} {name}")
+            console.print("[bold green]+ All privacy settings applied[/bold green]")
+
     def run_gaming_optimization(self):
-        """Run gaming optimization."""
         console.print("\n[bold yellow]=== Gaming Optimization ===[/bold yellow]")
-        
+
         if Confirm.ask("Apply gaming optimizations?"):
-            with console.status("[bold green]Optimizing for gaming...[/bold green]"):
-                self.performance.optimize_system_for_gaming()
-                self.performance.set_high_performance_power_plan()
-            console.print("[green]✓ Gaming optimizations applied[/green]")
-    
+            console.print("[bold green]Optimizing for gaming...[/bold green]")
+            results = []
+            results.append(("Game Mode", self.performance.optimize_system_for_gaming()))
+            results.append(("Power Plan", self.performance.set_high_performance_power_plan()))
+            for name, ok in results:
+                status = "[green]+[/green]" if ok else "[red]X[/red]"
+                console.print(f"  {status} {name}")
+            console.print("[bold green]+ Gaming optimizations applied[/bold green]")
+
     def show_system_info(self):
-        """Show system information."""
         console.print("\n[bold yellow]=== System Information ===[/bold yellow]")
-        
+
         with console.status("[bold green]Gathering system info...[/bold green]"):
             info = self.system.get_system_info()
-        
-        # OS Info
+
+        if not info:
+            console.print("[red]Could not retrieve system info (psutil required).[/red]")
+            return
+
         os_table = Table(title="Operating System", box=box.ROUNDED)
         os_table.add_column("Property", style="cyan")
         os_table.add_column("Value", style="green")
         os_table.add_row("Name", info['os']['name'])
         os_table.add_row("Architecture", info['os']['architecture'])
         console.print(os_table)
-        
-        # CPU Info
+
         cpu_table = Table(title="CPU", box=box.ROUNDED)
         cpu_table.add_column("Property", style="cyan")
         cpu_table.add_column("Value", style="green")
@@ -954,8 +952,7 @@ class WinOptimizer:
         cpu_table.add_row("Threads", str(info['cpu']['threads']))
         cpu_table.add_row("Usage", f"{info['cpu']['usage']}%")
         console.print(cpu_table)
-        
-        # Memory Info
+
         mem = info['memory']
         mem_table = Table(title="Memory", box=box.ROUNDED)
         mem_table.add_column("Property", style="cyan")
@@ -965,15 +962,14 @@ class WinOptimizer:
         mem_table.add_row("Available", get_size_format(mem['available']))
         mem_table.add_row("Usage", f"{mem['percent']}%")
         console.print(mem_table)
-        
-        # Disk Info
+
         disk_table = Table(title="Disks", box=box.ROUNDED)
         disk_table.add_column("Drive", style="cyan")
         disk_table.add_column("Total", style="green")
         disk_table.add_column("Used", style="yellow")
         disk_table.add_column("Free", style="green")
         disk_table.add_column("Usage", style="yellow")
-        
+
         for drive, usage in info['disk'].items():
             disk_table.add_row(
                 drive,
@@ -983,111 +979,173 @@ class WinOptimizer:
                 f"{usage['percent']}%"
             )
         console.print(disk_table)
-    
+
+    def run_backup_restore(self):
+        console.print("\n[bold yellow]=== Backup & Restore ===[/bold yellow]")
+
+        BACKUP_DIR.mkdir(parents=True, exist_ok=True)
+
+        options = [
+            ("1", "Create System Restore Point"),
+            ("2", "Backup Registry"),
+            ("3", "List Backups"),
+            ("4", "Restore from Backup"),
+            ("0", "Back"),
+        ]
+
+        for num, desc in options:
+            console.print(f"  [{num}] {desc}")
+
+        choice = Prompt.ask("\nSelect option", choices=["0", "1", "2", "3", "4"])
+
+        if choice == "1":
+            console.print("[bold green]Creating system restore point...[/bold green]")
+            try:
+                result = subprocess.run(
+                    ['powershell', '-Command',
+                     'Checkpoint-Computer -Description "WinOptimizer Restore Point" '
+                     '-RestorePointType MODIFY_SETTINGS'],
+                    capture_output=True, text=True
+                )
+                if result.returncode == 0:
+                    console.print("[green]+ Restore point created successfully[/green]")
+                else:
+                    console.print(f"[red]X Failed: {result.stderr.strip()}[/red]")
+            except Exception as e:
+                console.print(f"[red]X Error: {e}[/red]")
+
+        elif choice == "2":
+            console.print("[bold green]Exporting registry...[/bold green]")
+            reg_backup = BACKUP_DIR / f"registry_{datetime.now().strftime('%Y%m%d_%H%M%S')}.reg"
+            try:
+                result = subprocess.run(
+                    ['reg', 'export', 'HKCU', str(reg_backup), '/y'],
+                    capture_output=True, text=True
+                )
+                if result.returncode == 0:
+                    console.print(f"[green]+ Registry backed up to {reg_backup}[/green]")
+                else:
+                    console.print(f"[red]X Failed: {result.stderr.strip()}[/red]")
+            except Exception as e:
+                console.print(f"[red]X Error: {e}[/red]")
+
+        elif choice == "3":
+            backups = sorted(BACKUP_DIR.iterdir()) if BACKUP_DIR.exists() else []
+            if not backups:
+                console.print("[yellow]No backups found.[/yellow]")
+                return
+
+            table = Table(title="Available Backups", box=box.ROUNDED)
+            table.add_column("#", style="dim")
+            table.add_column("Name", style="cyan")
+            table.add_column("Type", style="green")
+            table.add_column("Date", style="yellow")
+
+            for i, backup in enumerate(backups, 1):
+                btype = "Folder" if backup.is_dir() else "File"
+                bdate = datetime.fromtimestamp(backup.stat().st_mtime).strftime('%Y-%m-%d %H:%M')
+                table.add_row(str(i), backup.name, btype, bdate)
+
+            console.print(table)
+
+        elif choice == "4":
+            backups = sorted(BACKUP_DIR.iterdir()) if BACKUP_DIR.exists() else []
+            if not backups:
+                console.print("[yellow]No backups found.[/yellow]")
+                return
+
+            try:
+                num = int(Prompt.ask("Enter backup number to restore")) - 1
+            except ValueError:
+                console.print("[red]Invalid number.[/red]")
+                return
+
+            if 0 <= num < len(backups):
+                backup = backups[num]
+                if backup.suffix == '.reg':
+                    if Confirm.ask(f"Import registry from {backup.name}?"):
+                        result = subprocess.run(
+                            ['reg', 'import', str(backup)],
+                            capture_output=True, text=True
+                        )
+                        if result.returncode == 0:
+                            console.print("[green]+ Registry imported successfully[/green]")
+                        else:
+                            console.print(f"[red]X Import failed: {result.stderr.strip()}[/red]")
+                else:
+                    console.print(f"[yellow]Cannot auto-restore folder: {backup.name}[/yellow]")
+                    console.print(f"[yellow]Location: {backup}[/yellow]")
+            else:
+                console.print("[red]Invalid backup number.[/red]")
+
     def run_full_optimization(self):
-        """Run full system optimization."""
         console.print("\n[bold yellow]=== Full System Optimization ===[/bold yellow]")
-        
+
         if not Confirm.ask("This will apply all optimizations. Continue?"):
             return
-        
+
         console.print("\n[bold cyan]Creating system backup...[/bold cyan]")
         create_backup([
             os.environ.get('TEMP', ''),
             str(Path.home() / 'AppData' / 'Roaming' / 'Microsoft' / 'Windows' / 'Start Menu' / 'Programs' / 'Startup'),
         ], f"full_optimization_{datetime.now().strftime('%Y%m%d_%H%M%S')}")
-        
+
+        steps = [
+            ("Cleaning system", lambda: self.cleanup.run_full_cleanup()),
+            ("Optimizing performance", lambda: (self.performance.set_high_performance_power_plan(), self.performance.disable_visual_effects())),
+            ("Optimizing network", lambda: (self.network.flush_dns(), self.network.optimize_tcp_ip())),
+            ("Applying privacy settings", lambda: (self.privacy.disable_telemetry(), self.privacy.disable_advertising_id())),
+            ("Optimizing for gaming", lambda: self.performance.optimize_system_for_gaming()),
+        ]
+
         results = []
-        
-        # Step 1: Cleanup
-        console.print("\n[bold cyan][1/5] Cleaning system...[/bold cyan]")
-        try:
-            self.cleanup.run_full_cleanup()
-            console.print("  [green]+ Cleanup completed[/green]")
-            results.append(("Cleanup", True))
-        except Exception as e:
-            console.print(f"  [red]X Cleanup failed: {e}[/red]")
-            results.append(("Cleanup", False))
-        
-        # Step 2: Performance
-        console.print("\n[bold cyan][2/5] Optimizing performance...[/bold cyan]")
-        try:
-            self.performance.set_high_performance_power_plan()
-            self.performance.disable_visual_effects()
-            console.print("  [green]+ Performance optimized[/green]")
-            results.append(("Performance", True))
-        except Exception as e:
-            console.print(f"  [red]X Performance optimization failed: {e}[/red]")
-            results.append(("Performance", False))
-        
-        # Step 3: Network
-        console.print("\n[bold cyan][3/5] Optimizing network...[/bold cyan]")
-        try:
-            self.network.flush_dns()
-            self.network.optimize_tcp_ip()
-            console.print("  [green]+ Network optimized[/green]")
-            results.append(("Network", True))
-        except Exception as e:
-            console.print(f"  [red]X Network optimization failed: {e}[/red]")
-            results.append(("Network", False))
-        
-        # Step 4: Privacy
-        console.print("\n[bold cyan][4/5] Applying privacy settings...[/bold cyan]")
-        try:
-            self.privacy.disable_telemetry()
-            self.privacy.disable_advertising_id()
-            console.print("  [green]+ Privacy settings applied[/green]")
-            results.append(("Privacy", True))
-        except Exception as e:
-            console.print(f"  [red]X Privacy settings failed: {e}[/red]")
-            results.append(("Privacy", False))
-        
-        # Step 5: Gaming
-        console.print("\n[bold cyan][5/5] Optimizing for gaming...[/bold cyan]")
-        try:
-            self.performance.optimize_system_for_gaming()
-            console.print("  [green]+ Gaming optimized[/green]")
-            results.append(("Gaming", True))
-        except Exception as e:
-            console.print(f"  [red]X Gaming optimization failed: {e}[/red]")
-            results.append(("Gaming", False))
-        
-        # Summary
-        console.print("\n" + "="*50)
+        for i, (desc, func) in enumerate(steps, 1):
+            console.print(f"\n[bold cyan][{i}/{len(steps)}] {desc}...[/bold cyan]")
+            try:
+                func()
+                console.print(f"  [green]+ {desc} completed[/green]")
+                results.append((desc, True))
+            except Exception as e:
+                console.print(f"  [red]X {desc} failed: {e}[/red]")
+                results.append((desc, False))
+
+        console.print("\n" + "=" * 50)
         console.print("[bold yellow]OPTIMIZATION SUMMARY[/bold yellow]")
-        console.print("="*50)
-        
+        console.print("=" * 50)
+
         success = sum(1 for _, ok in results if ok)
         total = len(results)
-        
+
         for name, ok in results:
             status = "[green]SUCCESS[/green]" if ok else "[red]FAILED[/red]"
             console.print(f"  {name}: {status}")
-        
-        console.print("\n" + "="*50)
+
+        console.print("\n" + "=" * 50)
         if success == total:
             console.print(f"[bold green]All {total} optimizations completed successfully![/bold green]")
         else:
             console.print(f"[bold yellow]{success}/{total} optimizations completed[/bold yellow]")
-        
+
         console.print("[yellow]Some changes may require a restart to take effect.[/yellow]")
-        
+
         log_operation("FULL_OPTIMIZATION", f"Results: {success}/{total} successful")
-    
+
     def run(self):
-        """Main application loop."""
-        # Check for admin rights
         if not is_admin():
             console.print("[yellow]Warning: Some features require administrator privileges.[/yellow]")
             if Confirm.ask("Run as administrator?"):
                 run_as_admin()
-        
+
+        clear_screen()
         self.display_banner()
-        
+
         while True:
             self.display_menu()
             choice = Prompt.ask("\nSelect option", choices=["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"])
-            
+
+            clear_screen()
+            self.display_banner()
+
             if choice == "0":
                 console.print("[bold green]Thank you for using WinOptimizer![/bold green]")
                 break
@@ -1106,13 +1164,13 @@ class WinOptimizer:
             elif choice == "7":
                 self.show_system_info()
             elif choice == "8":
-                console.print("[yellow]Backup & Restore coming soon![/yellow]")
+                self.run_backup_restore()
             elif choice == "9":
                 self.run_full_optimization()
-            
+
             console.print()
 
-# ── Entry Point ────────────────────────────────────────────────────────────────
+
 if __name__ == "__main__":
     try:
         optimizer = WinOptimizer()
