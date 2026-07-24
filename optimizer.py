@@ -789,13 +789,16 @@ class WinOptimizer:
 
         if choice == "1":
             console.print()
-            animated_step("Creating restore point", lambda: subprocess.run(
+            result = animated_step("Creating restore point", lambda: subprocess.run(
                 ['powershell', '-Command',
                  'Checkpoint-Computer -Description "WinOptimizer Restore Point" '
                  '-RestorePointType MODIFY_SETTINGS'],
                 capture_output=True
             ).returncode == 0)
-            console.print("[green]+ Restore point created[/green]")
+            if result:
+                console.print("[green]+ Restore point created[/green]")
+            else:
+                console.print("[red]X Restore point failed (service may be disabled)[/red]")
 
         elif choice == "2":
             BACKUP_DIR.mkdir(parents=True, exist_ok=True)
