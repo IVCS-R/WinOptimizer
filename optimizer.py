@@ -112,7 +112,6 @@ def get_directory_size(path: Path) -> int:
 
 
 def animated_step(description: str, func, *args, **kwargs):
-    """Run a function with animated spinner and return result."""
     result = [None]
     error = [None]
 
@@ -129,20 +128,22 @@ def animated_step(description: str, func, *args, **kwargs):
     idx = 0
     while thread.is_alive():
         symbol = symbols[idx % len(symbols)]
-        console.print(f"\r  [bold cyan]{symbol}[/bold cyan] {description}...", end="", flush=True)
+        sys.stdout.write(f"\r  {symbol} {description}...")
+        sys.stdout.flush()
         time.sleep(0.15)
         idx += 1
 
-    console.print(f"\r  [green]+[/green] {description}... [bold green]DONE[/bold green]   ")
+    sys.stdout.write(f"\r  + {description}... DONE          \n")
+    sys.stdout.flush()
 
     if error[0]:
-        console.print(f"    [red]X Error: {error[0]}[/red]")
+        sys.stdout.write(f"    X Error: {error[0]}\n")
+        sys.stdout.flush()
         return None
     return result[0]
 
 
 def animated_step_with_size(description: str, func, *args, **kwargs):
-    """Run a function with animated spinner, return result with size info."""
     result = [None]
     error = [None]
 
@@ -159,23 +160,27 @@ def animated_step_with_size(description: str, func, *args, **kwargs):
     idx = 0
     while thread.is_alive():
         symbol = symbols[idx % len(symbols)]
-        console.print(f"\r  [bold cyan]{symbol}[/bold cyan] {description}...", end="", flush=True)
+        sys.stdout.write(f"\r  {symbol} {description}...")
+        sys.stdout.flush()
         time.sleep(0.15)
         idx += 1
 
     if error[0]:
-        console.print(f"\r  [red]X[/red] {description}... [bold red]FAILED[/bold red]   ")
-        console.print(f"    [red]{error[0]}[/red]")
+        sys.stdout.write(f"\r  X {description}... FAILED          \n")
+        sys.stdout.flush()
+        sys.stdout.write(f"    {error[0]}\n")
+        sys.stdout.flush()
         return None
 
     if result[0] and isinstance(result[0], tuple) and len(result[0]) >= 1:
         size = result[0][0]
         if size and size > 0:
-            console.print(f"\r  [green]+[/green] {description}... [bold green]{get_size_format(size)} freed[/bold green]   ")
+            sys.stdout.write(f"\r  + {description}... {get_size_format(size)} freed          \n")
         else:
-            console.print(f"\r  [green]+[/green] {description}... [bold green]DONE[/bold green]   ")
+            sys.stdout.write(f"\r  + {description}... DONE          \n")
     else:
-        console.print(f"\r  [green]+[/green] {description}... [bold green]DONE[/bold green]   ")
+        sys.stdout.write(f"\r  + {description}... DONE          \n")
+    sys.stdout.flush()
 
     return result[0]
 
