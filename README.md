@@ -1,65 +1,119 @@
+<div align="center">
+
 # WinOptimizer
 
-A comprehensive Windows system optimization suite with a modern terminal interface.
+**Advanced Windows System Optimization Suite**
 
-![Python](https://img.shields.io/badge/Python-3.8+-3776AB?style=for-the-badge&logo=python&logoColor=white)
-![Windows](https://img.shields.io/badge/Windows-10%2F11-0078D4?style=for-the-badge&logo=windows&logoColor=white)
-![License](https://img.shields.io/badge/License-MIT-green?style=for-the-badge)
+[![Python](https://img.shields.io/badge/Python-3.8+-3776AB?style=for-the-badge&logo=python&logoColor=white)](https://python.org)
+[![Windows](https://img.shields.io/badge/Windows-10%2F11-0078D4?style=for-the-badge&logo=windows&logoColor=white)](https://microsoft.com)
+[![License](https://img.shields.io/badge/License-MIT-00FF00?style=for-the-badge)](LICENSE)
+[![Version](https://img.shields.io/badge/Version-2.0.0-FCD936?style=for-the-badge)](https://github.com/IVCS-R/WinOptimizer)
+[![PRs](https://img.shields.io/badge/PRs-Welcome-00FF00?style=for-the-badge)](CONTRIBUTING.md)
+
+Clean. Optimize. Perform.
+
+</div>
+
+---
+
+## What is WinOptimizer?
+
+A comprehensive, terminal-based Windows optimization tool built in Python. One-click system cleanup, gaming mode, startup management, and more — all with animated progress indicators and a clean interface.
+
+```
++========================================================+
+|                      MAIN MENU                          |
++========================================================+
+|  [1] Optimize           - Full system optimization      |
+|  [2] Gaming Mode        - Optimize for gaming           |
+|  [3] Startup            - Manage startup programs       |
+|  [4] System Info        - View system details           |
+|  [5] Backup             - Restore point / registry      |
+|  [6] Settings           - Individual tweaks             |
+|  [0] Exit                                               |
++========================================================+
+```
+
+---
 
 ## Features
 
-### System Cleanup
+<details>
+<summary><b>System Optimization</b></summary>
+
 - Clean temporary files from multiple locations
 - Clear browser cache (Chrome, Edge, Firefox, Brave)
-- Remove Windows log files
+- Remove Windows log files and crash dumps
 - Empty Recycle Bin
 - Calculate space savings before cleanup
-
-### Startup Manager
-- View all startup programs
-- Disable/enable startup items
-- Manage registry-based startup entries
-- Handle Startup folder items
-
-### Performance Optimization
 - Set High Performance power plan
 - Disable unnecessary visual effects
 - Optimize virtual memory (pagefile)
 - Disable Windows Search indexing
-- Gaming mode optimization
 
-### Network Optimization
-- Flush DNS cache
-- Optimize TCP/IP settings
-- Reset Winsock catalog
-- Configure network adapter settings
+</details>
 
-### Privacy Settings
-- Disable Windows telemetry
-- Disable Cortana
-- Disable advertising ID
-- Disable activity history
+<details>
+<summary><b>Gaming Mode</b></summary>
 
-### System Information
-- CPU details and usage
-- Memory usage and availability
-- Disk space information
-- Running processes monitor
-
-### Gaming Optimization
 - Enable Game Mode
 - Optimize GPU scheduling
 - Set high performance power plan
 - Disable unnecessary background processes
+- Maximize system resources for gaming
+
+</details>
+
+<details>
+<summary><b>Startup Manager</b></summary>
+
+- View all startup programs
+- Disable/enable startup items
+- Handle registry-based startup entries
+- Manage Startup folder items
+
+</details>
+
+<details>
+<summary><b>System Information</b></summary>
+
+- CPU details and real-time usage
+- Memory usage and availability
+- Disk space information
+- Running processes monitor
+- Network adapter details
+
+</details>
+
+<details>
+<summary><b>Backup & Restore</b></summary>
+
+- Create Windows restore points
+- Export/Import registry backups
+- Timestamped for easy identification
+- Stored in `~/WinOptimizer_Backups/`
+
+</details>
+
+<details>
+<summary><b>Individual Settings</b></summary>
+
+- Disable Windows telemetry
+- Disable Cortana
+- Disable advertising ID
+- Disable activity history
+- Flush DNS cache
+- Optimize TCP/IP settings
+- Reset Winsock catalog
+
+</details>
+
+---
 
 ## Installation
 
-### Prerequisites
-- Python 3.8 or higher
-- Windows 10 or 11
-- Administrator privileges (for some features)
+### Option 1: Portable (recommended)
 
-### Install from source
 ```bash
 git clone https://github.com/IVCS-R/WinOptimizer.git
 cd WinOptimizer
@@ -67,107 +121,63 @@ pip install -r requirements.txt
 python optimizer.py
 ```
 
-### Quick install
+### Option 2: NSIS Installer
+
+Download `WinOptimizer_Setup.exe` from [Releases](https://github.com/IVCS-R/WinOptimizer/releases) and run the installer.
+
+### Option 3: PyInstaller Build
+
+Download `WinOptimizer_Installer.exe` from [Releases](https://github.com/IVCS-R/WinOptimizer/releases) — no Python required.
+
+### Quick Run
+
 ```bash
 pip install rich psutil
 python optimizer.py
 ```
 
-## Usage
+---
 
-Run the optimizer:
-```bash
-python optimizer.py
-```
+## Requirements
 
-The application will display a menu with the following options:
+| Requirement | Version |
+|-------------|---------|
+| Python | 3.8+ |
+| Windows | 10 / 11 |
+| rich | Latest |
+| psutil | Latest |
 
-```
-╔══════════════════════════════════════════════════════════════╗
-║                        MAIN MENU                            ║
-╠══════════════════════════════════════════════════════════════╣
-║  [1] System Cleanup        - Clean temp files & cache       ║
-║  [2] Startup Manager       - Manage startup programs        ║
-║  [3] Performance Optimization - Optimize system speed       ║
-║  [4] Network Optimization  - Optimize network settings      ║
-║  [5] Privacy Settings      - Configure privacy options      ║
-║  [6] Gaming Optimization   - Optimize for gaming            ║
-║  [7] System Information    - View system details            ║
-║  [8] Backup & Restore      - Backup/restore settings        ║
-║  [9] Full Optimization     - Run all optimizations          ║
-║  [0] Exit                                                          ║
-╚══════════════════════════════════════════════════════════════╝
-```
+> Some features require Administrator privileges. The tool will warn you if not running as admin.
 
-## Features in Detail
+---
 
-### System Cleanup
-
-The cleanup module scans multiple locations for files that can be safely removed:
-
-- **Temp Files**: Windows temp folders, user temp folders
-- **Browser Cache**: Cache directories for major browsers
-- **Windows Logs**: System logs and crash dumps
-- **Recycle Bin**: Already deleted files
-
-Before cleaning, it shows you exactly how much space will be freed and creates a backup.
-
-### Startup Manager
-
-Manages programs that run automatically when Windows starts:
-
-- **Registry-based**: Items in `HKCU\...\Run` and `HKLM\...\Run`
-- **Startup Folder**: Programs in the Startup folder
-- **Safe disabling**: Items are backed up before disabling
-
-### Performance Optimization
-
-Optimizes Windows settings for better performance:
-
-- **Power Plan**: Sets High Performance mode
-- **Visual Effects**: Disables animations and transparency
-- **Virtual Memory**: Optimizes pagefile size
-- **Search Indexing**: Disables background indexing
-
-### Network Optimization
-
-Improves network performance:
-
-- **DNS Cache**: Clears stale DNS entries
-- **TCP/IP**: Optimizes network stack settings
-- **Winsock**: Resets network catalog
-
-### Privacy Settings
-
-Reduces Windows telemetry and tracking:
-
-- **Telemetry**: Disables diagnostic data collection
-- **Cortana**: Disables voice assistant
-- **Advertising ID**: Stops personalized ads
-
-## Backup & Restore
-
-All optimizations create backups before making changes:
-
-- Backups stored in `~/WinOptimizer_Backups/`
-- Timestamped for easy identification
-- Can be restored manually if needed
-
-## Logs
-
-Operations are logged to `~/WinOptimizer_Logs/`:
-
-- Daily log files
-- Timestamped entries
-- Operation details
-
-## Safety Features
+## Safety
 
 - **Admin check**: Warns when not running as administrator
 - **Backup creation**: Always backs up before changes
 - **Confirmation prompts**: Asks before destructive operations
 - **Error handling**: Graceful handling of failures
-- **Logging**: All operations are logged
+- **Logging**: All operations are logged to `~/WinOptimizer_Logs/`
+
+---
+
+## Project Structure
+
+```
+WinOptimizer/
+├── optimizer.py            # Main application
+├── install_verbose.py      # Verbose installer (terminal output)
+├── uninstall_verbose.py    # Verbose uninstaller
+├── installer.nsi           # NSIS installer script
+├── requirements.txt        # Python dependencies
+├── LICENSE                 # MIT License
+├── README.md               # This file
+└── dist/                   # Built executables
+    ├── WinOptimizer_Installer.exe
+    └── WinOptimizer_Uninstaller.exe
+```
+
+---
 
 ## Contributing
 
@@ -179,15 +189,25 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 4. Push to the branch (`git push origin feature/AmazingFeature`)
 5. Open a Pull Request
 
+---
+
 ## License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+---
 
 ## Disclaimer
 
 This tool modifies system settings. While it creates backups and uses safe methods, use it at your own risk. Always create a system restore point before making significant changes.
 
-## Acknowledgments
+---
 
-- [Rich](https://github.com/Textualize/rich) - For the beautiful terminal interface
-- [psutil](https://github.com/giampaolo/psutil) - For system information
+<div align="center">
+
+**Made with Python and Rich**
+
+[![Rich](https://img.shields.io/badge/Rich-Terminal_UI-0D1117?style=for-the-badge&logo=python&logoColor=white)](https://github.com/Textualize/rich)
+[![psutil](https://img.shields.io/badge/psutil-System-0D1117?style=for-the-badge&logo=python&logoColor=white)](https://github.com/giampaolo/psutil)
+
+</div>
